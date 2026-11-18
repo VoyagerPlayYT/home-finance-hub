@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOME FINANCE & UTILITIES // BUDGET & METER HUB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-badge">FIN-CORP</div>
+      <span class="brand-title">HOME FINANCE & UTILITIES HUB</span>
+      <span class="brand-sub font-mono">HOUSEHOLD METERS // BUDGET & GOALS</span>
+    </div>
+    <div class="metrics-bar">
+      <div class="metric-item">
+        <span class="label">NET BALANCE</span>
+        <span class="value font-mono text-jade" id="metricBalance">0 ₽</span>
+      </div>
+      <div class="metric-item">
+        <span class="label">EXPENSES</span>
+        <span class="value font-mono text-red" id="metricExpense">0 ₽</span>
+      </div>
+      <div class="metric-item">
+        <span class="label">LATEST UTILITY</span>
+        <span class="value font-mono text-jade" id="metricUtility">0 ₽</span>
+      </div>
+      <div class="metric-item">
+        <span class="label">PORT</span>
+        <span class="value font-mono">8020</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <main class="workspace">
+    <!-- Left Sidebar: Savings Goals Piggybank -->
+    <aside class="panel side-panel">
+      <div class="panel-header">
+        <span class="panel-title">SAVINGS TARGETS (PIGGYBANK)</span>
+        <button class="mini-btn text-jade" id="btnOpenGoalModal">+ GOAL</button>
+      </div>
+
+      <div class="goals-container" id="goalsContainer">
+        <!-- Rendered from SQLite savings_goals -->
+      </div>
+
+      <button class="btn btn-jade mt-auto" id="btnOpenTxModal">+ RECORD TRANSACTION</button>
+      <button class="btn mt-6" id="btnOpenMetersModal">+ SUBMIT UTILITY METERS</button>
+    </aside>
+
+    <!-- Main Viewport: Tabs (Utilities vs Transactions) -->
+    <section class="main-viewport">
+      <div class="view-tabs">
+        <button class="v-tab active" data-tab="utilities">UTILITY METERS & BILLING</button>
+        <button class="v-tab" data-tab="transactions">EXPENSE & INCOME LEDGER</button>
+      </div>
+
+      <!-- Tab 1: Utilities Calculator -->
+      <div class="tab-pane active" id="paneUtilities">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>PERIOD</th>
+                <th>ELECTRICITY (Д/Н)</th>
+                <th>WATER (Х/Г)</th>
+                <th>GAS</th>
+                <th>INTERNET / HEATING</th>
+                <th>TOTAL BILL</th>
+              </tr>
+            </thead>
+            <tbody id="utilitiesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 2: Transactions Ledger -->
+      <div class="tab-pane hidden" id="paneTransactions">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>DATE</th>
+                <th>TYPE</th>
+                <th>CATEGORY</th>
+                <th>AMOUNT</th>
+                <th>NOTE</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="txTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Record Transaction -->
+  <div class="overlay hidden" id="txModal">
+    <div class="modal-card">
+      <div class="modal-badge">LEDGER ENTRY</div>
+      <h2 class="modal-title">RECORD FINANCIAL TRANSACTION</h2>
+      <div class="modal-form">
+        <div class="input-row">
+          <label>Type:</label>
+          <select id="txType" class="cyber-select font-mono">
+            <option value="EXPENSE" selected>Расход (Expense)</option>
+            <option value="INCOME">Доход (Income)</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <label>Category:</label>
+          <select id="txCategory" class="cyber-select font-mono">
+            <option value="Продукты питания">Продукты питания</option>
+            <option value="Коммунальные услуги">Коммунальные услуги</option>
+            <option value="Железо сервера">Железо сервера (HP ProLiant)</option>
+            <option value="Здоровье и аптека">Здоровье и аптека</option>
+            <option value="Транспорт и бензин">Транспорт и бензин</option>
+            <option value="Образование">Образование</option>
+            <option value="Развлечения">Развлечения</option>
+            <option value="Зарплата / Фриланс">Зарплата / Фриланс</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <label>Amount (₽):</label>
+          <input type="number" step="0.01" id="txAmount" placeholder="1500.00" class="cyber-input font-mono">
+        </div>
+        <div class="input-row">
+          <label>Date:</label>
+          <input type="date" id="txDate" class="cyber-input font-mono">
+        </div>
+        <div class="input-row">
+          <label>Note / Description:</label>
+          <input type="text" id="txNote" placeholder="e.g. SFP+ кабель, покупки в магазине..." class="cyber-input">
+        </div>
+        <button class="btn btn-jade mt-12" id="btnSubmitTx">SAVE TO FINANCIAL LEDGER</button>
+        <button class="btn" id="btnCloseTxModal">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Submit Utility Meters -->
+  <div class="overlay hidden" id="metersModal">
+    <div class="modal-card">
+      <div class="modal-badge">METER READINGS</div>
+      <h2 class="modal-title">SUBMIT MONTHLY METERS</h2>
+      <div class="modal-form">
+        <div class="input-row">
+          <label>Period (Month):</label>
+          <input type="month" id="meterPeriod" class="cyber-input font-mono">
+        </div>
+        <div class="input-row">
+          <label>Электричество День (кВт⋅ч):</label>
+          <input type="number" step="1" id="mElecDay" value="1550" class="cyber-input font-mono">
+        </div>
+        <div class="input-row">
+          <label>Электричество Ночь (кВт⋅ч):</label>
+          <input type="number" step="1" id="mElecNight" value="740" class="cyber-input font-mono">
+        </div>
+        <div class="input-row">
+          <label>Холодная вода (м³):</label>
+          <input type="number" step="0.1" id="mColdWater" value="122.0" class="cyber-input font-mono">
+        </div>
+        <div class="input-row">
+          <label>Горячая вода (м³):</label>
+          <input type="number" step="0.1" id="mHotWater" value="68.0" class="cyber-input font-mono">
+        </div>
+        <div class="input-row">
+          <label>Газ (м³):</label>
+          <input type="number" step="1" id="mGas" value="225" class="cyber-input font-mono">
+        </div>
+        <button class="btn btn-jade mt-12" id="btnSubmitMeters">CALCULATE & PERSIST BILL</button>
+        <button class="btn" id="btnCloseMetersModal">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Savings Goal -->
+  <div class="overlay hidden" id="goalModal">
+    <div class="modal-card">
+      <div class="modal-badge">PIGGYBANK</div>
+      <h2 class="modal-title">CREATE SAVINGS TARGET</h2>
+      <div class="modal-form">
+        <div class="input-row">
+          <label>Target Title:</label>
+          <input type="text" id="goalTitle" placeholder="e.g. 10GbE Switch Mikrotik..." class="cyber-input">
+        </div>
+        <div class="input-row">
+          <label>Target Amount (₽):</label>
+          <input type="number" id="goalTarget" placeholder="25000" class="cyber-input font-mono">
+        </div>
+        <button class="btn btn-jade mt-12" id="btnSubmitGoal">CREATE TARGET</button>
+        <button class="btn" id="btnCloseGoalModal">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/finance.js"></script>
+</body>
+</html>
