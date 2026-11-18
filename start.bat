@@ -2,11 +2,21 @@
 chcp 65001 > nul
 title Home Finance Hub [Port 8020]
 echo ========================================================
-echo   HOME FINANCE & UTILITIES // BUDGET & METER HUB
+echo   HOME FINANCE HUB [PORT 8020]
 echo ========================================================
-echo [INFO] Проверка и установка зависимостей...
-python -m pip install -r requirements.txt --quiet
-echo [INFO] Запуск FastAPI веб-сервера на http://localhost:8020 ...
-start http://localhost:8020
-python -m uvicorn main:app --host 0.0.0.0 --port 8020
+
+if exist "C:\Python313\python.exe" (
+    set "PY=C:\Python313\python.exe"
+) else (
+    set "PY=python"
+)
+
+echo [INFO] Проверка и освобождение порта 8020...
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":8020" ^| findstr "LISTENING"') do taskkill /f /pid %%a >nul 2>&1
+
+echo [INFO] Запуск веб-сервера на http://localhost:8020 ...
+start "" cmd /c "timeout /t 2 /nobreak >nul && start http://localhost:8020"
+
+cd /d "%~dp0"
+"%PY%" -m uvicorn main:app --host 127.0.0.1 --port 8020
 pause
